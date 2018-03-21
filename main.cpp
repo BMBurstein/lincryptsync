@@ -68,10 +68,16 @@ struct DirPair {
                 else if (clrTime < encTime) {
                     decryptFile(clr.first);
                 }
+                encFiles.erase(enc);
             }
             else {
                 encryptFile(clr.first);
             }
+        }
+        clrFiles.clear();
+        for (auto const& enc : encFiles) {
+            auto encTime = fs::last_write_time(enc.second);
+            decryptFile(enc.first);
         }
     }
 
@@ -81,7 +87,7 @@ struct DirPair {
             fs::create_directories(encDir / name);
         }
         else {
-            std::system(("7zr a -y " + (encDir / name).string() + ".7z " + path.string()).c_str());
+            std::system(("7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl " + (encDir / name).string() + ".7z " + path.string()).c_str());
         }
     }
 
@@ -91,7 +97,7 @@ struct DirPair {
             fs::create_directories(clrDir / name);
         }
         else {
-            std::system(("7zr x -y " + (clrDir / name).string() + ".7z " + path.string()).c_str());
+            std::system(("7zr e -y " + path.string() + ".7z -o" + clrDir.string()).c_str());
         }
     }
 
