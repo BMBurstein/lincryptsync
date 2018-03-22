@@ -26,6 +26,7 @@ struct DirPair {
     SyncType syncType;
     std::map<std::string, fs::directory_entry> clrFiles;
     std::map<std::string, fs::directory_entry> encFiles;
+    std::string encExt = ".7z";
     
     DirPair(fs::path clrPath,
             fs::path encPath,
@@ -61,44 +62,50 @@ struct DirPair {
             auto clrTime = fs::last_write_time(clr.second);
             auto enc = encFiles.find(clr.first);
             if(enc != encFiles.end()) {
-                auto encTime = fs::last_write_time(enc->second);
-                if(encTime < clrTime) {
-                    encryptFile(clr.first);
-                }
-                else if (clrTime < encTime) {
-                    decryptFile(clr.first);
+                if(!fs::is_directory(clr.second)) {
+                    auto encTime = fs::last_write_time(enc->second);
+                    if(encTime < clrTime) {
+                        encryptFile(clr.first);
+                    }
+                    else if (clrTime < encTime) {
+                        decryptFile(clr.first);
+                    }
                 }
                 encFiles.erase(enc);
             }
             else {
-                encryptFile(clr.first);
+                if(fs::is_directory(clr.second)) {
+                    fs::create_directories(encDir / clr.first);
+                }
+                else {
+                    encryptFile(clr.first);
+                }
             }
         }
         clrFiles.clear();
         for (auto const& enc : encFiles) {
-            auto encTime = fs::last_write_time(enc.second);
-            decryptFile(enc.first);
+            if(fs::is_directory(enc.second)) {
+                fs::create_directories(clrDir / enc.first);
+            }
+            else {
+                decryptFile(enc.first);
+            }
         }
     }
 
     void encryptFile(std::string name) {
         auto const& path = clrFiles[name].path();
-        if(fs::is_directory(path)) {
-            fs::create_directories(encDir / name);
-        }
-        else {
-            std::system(("7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl " + (encDir / name).string() + ".7z " + path.string()).c_str());
-        }
+        auto encPath = encDir / (name + ".7z");
+        auto cmd = "7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl "
+                   + encPath.string() + " " + path.string();
+        std::system(cmd.c_str());
+        fs::last_write_time(encPath, fs::last_write_time(path));
     }
 
     void decryptFile(std::string name) {
         auto const& path = encFiles[name].path();
-        if(fs::is_directory(path)) {
-            fs::create_directories(clrDir / name);
-        }
-        else {
-            std::system(("7zr e -y " + path.string() + ".7z -o" + clrDir.string()).c_str());
-        }
+        auto cmd = "7zr e -y " + path.string() + " -o" + clrDir.string();
+        std::system(cmd.c_str());
     }
 
     std::string normalizeClr(fs::path path) {
@@ -106,7 +113,9 @@ struct DirPair {
     }
     std::string normalizeEnc(fs::path path) {
         auto name = path.string().erase(0, encDir.string().length());
-        name.erase(name.length() - 3);
+        if(path.extension() == encExt) {
+            name.erase(name.length() - encExt.length());
+        }
         return name;
     }
 };
