@@ -15,6 +15,11 @@ DirPair::DirPair(fs::path clrPath, fs::path encPath, EncType encType, SyncType s
     if(!fs::is_directory(encDir)) {
         fs::create_directories(encDir);
     }
+
+    switch(encType) {
+    case EncType::z7:
+        encExt = ".7z"; break;
+    }
 }
 
 void DirPair::sync() {

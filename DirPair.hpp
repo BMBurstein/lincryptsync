@@ -33,7 +33,7 @@ private:
     SyncType syncType;
     std::map<std::string, fs::directory_entry> clrFiles;
     std::map<std::string, fs::directory_entry> encFiles;
-    std::string encExt = ".7z";
+    std::string encExt;
 
     void scan();
 
