@@ -1,8 +1,11 @@
-#include <experimental/filesystem>
+#include "DirWatcher.hpp"
+
+#include <filesystem>
 #include <map>
 #include <string>
+#include <set>
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 enum class EncType {
     None,
@@ -25,21 +28,21 @@ public:
     );
 
     void sync();
+    void fullSync();
 
 private:
-    fs::path clrDir;
-    fs::path encDir;
+    fs::path dirs[2];
     EncType  encType;
     SyncType syncType;
-    std::map<std::string, fs::directory_entry> clrFiles;
-    std::map<std::string, fs::directory_entry> encFiles;
+    std::map<std::string, fs::path> files[2];
     std::string encExt;
+    DirWatcher watcher[2];
 
-    void scan();
+    void handleEvents();
 
-    void encryptFile(std::string name);
-    void decryptFile(std::string name);
+    void encryptFile(std::string const&);
+    void decryptFile(std::string const&);
 
-    std::string normalizeClr(fs::path path);
-    std::string normalizeEnc(fs::path path);
+    std::string normalizeClr(fs::path const&);
+    std::string normalizeEnc(fs::path const&);
 };
