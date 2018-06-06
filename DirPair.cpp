@@ -36,10 +36,10 @@ void DirPair::sync() {
             if(!fs::is_directory(clr.second)) {
                 auto encTime = fs::last_write_time(enc->second);
                 if(encTime + 1s < clrTime) {
-                    encryptFile(clr.first);
+                    encryptFile(clr.second);
                 }
                 else if (clrTime + 1s < encTime) {
-                    decryptFile(clr.first);
+                    decryptFile(enc->second);
                 }
             }
             files[1].erase(enc);
@@ -49,7 +49,7 @@ void DirPair::sync() {
                 fs::create_directories(dirs[1] / clr.first);
             }
             else {
-                encryptFile(clr.first);
+                encryptFile(clr.second);
             }
         }
     }
@@ -59,7 +59,7 @@ void DirPair::sync() {
             fs::create_directories(dirs[0] / enc.first);
         }
         else {
-            decryptFile(enc.first);
+            decryptFile(enc.second);
         }
     }
     files[1].clear();
@@ -112,8 +112,8 @@ void DirPair::handleEvents() {
     }
 }
 
-void DirPair::encryptFile(std::string const& name) {
-    auto const& path = files[0][name];
+void DirPair::encryptFile(fs::path const& path) {
+    auto const name = normalizeClr(path);
     auto encPath = dirs[1] / (name + ".7z");
     auto cmd = "7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl "
                + encPath.string() + " " + path.string();
@@ -122,8 +122,7 @@ void DirPair::encryptFile(std::string const& name) {
     watcher[1].ignore(encPath);
 }
 
-void DirPair::decryptFile(std::string const& name) {
-    auto const& path = files[1][name];
+void DirPair::decryptFile(fs::path const& path) {
     auto cmd = "7zr e -y " + path.string() + " -o" + dirs[0].string();
     std::system(cmd.c_str());
     watcher[0].ignore(dirs[0] / normalizeEnc(path));

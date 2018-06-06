@@ -40,8 +40,8 @@ private:
 
     void handleEvents();
 
-    void encryptFile(std::string const&);
-    void decryptFile(std::string const&);
+    void encryptFile(fs::path const& path);
+    void decryptFile(fs::path const& path);
 
     std::string normalizeClr(fs::path const&);
     std::string normalizeEnc(fs::path const&);
