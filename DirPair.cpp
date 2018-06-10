@@ -45,22 +45,12 @@ void DirPair::sync() {
             files[1].erase(enc);
         }
         else {
-            if(fs::is_directory(clr.second)) {
-                fs::create_directories(dirs[1] / clr.first);
-            }
-            else {
-                encryptFile(clr.second);
-            }
+            encryptFile(clr.second);
         }
     }
     files[0].clear();
     for (auto const& enc : files[1]) {
-        if(fs::is_directory(enc.second)) {
-            fs::create_directories(dirs[0] / enc.first);
-        }
-        else {
-            decryptFile(enc.second);
-        }
+        decryptFile(enc.second);
     }
     files[1].clear();
 }
@@ -82,31 +72,18 @@ void DirPair::handleEvents() {
     while(watcher[0].getEvent(ev)) {
         switch(ev.evType) {
         case DirWatcher::DirEventTypes::CREATE:
+        case DirWatcher::DirEventTypes::MODIFY:
             if(ev.isDir) {
                 for(auto const& f : fs::recursive_directory_iterator(ev.path)) {
-                    files[0][normalizeClr(f)] = f;
+                    encryptFile(ev.path);
                 }
             }
             else {
-                files[0][normalizeClr(ev.path)] = ev.path;
+                encryptFile(ev.path);
             }
             break;
         case DirWatcher::DirEventTypes::DELETE:
             fs::remove(ev.path); //TODO
-            break;
-        case DirWatcher::DirEventTypes ::MODIFY:
-            if(ev.isDir) {
-                for(auto const& f : fs::recursive_directory_iterator(ev.path)) {
-                    auto name = normalizeClr(f);
-                    files[0][name] = f;
-                    files[1][name] = f;
-                }
-            }
-            else {
-                auto name = normalizeClr(ev.path);
-                files[0][name] = ev.path;
-                files[1][name] = ev.path;
-            }
             break;
         }
     }
@@ -114,18 +91,32 @@ void DirPair::handleEvents() {
 
 void DirPair::encryptFile(fs::path const& path) {
     auto const name = normalizeClr(path);
-    auto encPath = dirs[1] / (name + ".7z");
-    auto cmd = "7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl "
-               + encPath.string() + " " + path.string();
-    std::system(cmd.c_str());
-    fs::last_write_time(encPath, fs::last_write_time(path));
+    auto encPath = dirs[1] / name;
+    if(fs::is_directory(path)) {
+        fs::create_directories(encPath);
+    }
+    else {
+        encPath += ".7z";
+        auto cmd = "7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl "
+                   + encPath.string() + " " + path.string();
+        std::system(cmd.c_str());
+        fs::last_write_time(encPath, fs::last_write_time(path));
+    }
     watcher[1].ignore(encPath);
 }
 
 void DirPair::decryptFile(fs::path const& path) {
-    auto cmd = "7zr e -y " + path.string() + " -o" + dirs[0].string();
-    std::system(cmd.c_str());
-    watcher[0].ignore(dirs[0] / normalizeEnc(path));
+    auto const name = normalizeEnc(path);
+    auto clrPath = dirs[0] / name;
+    if(fs::is_directory(path)) {
+        fs::create_directories(clrPath);
+    }
+    else {
+        clrPath.remove_filename();
+        auto cmd = "7zr e -y " + path.string() + " -o" + clrPath.string();
+        std::system(cmd.c_str());
+    }
+    watcher[0].ignore(clrPath);
 }
 
 std::string DirPair::normalizeClr(fs::path const& path) {
