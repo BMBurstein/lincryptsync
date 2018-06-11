@@ -90,13 +90,11 @@ void DirPair::handleEvents() {
 }
 
 void DirPair::encryptFile(fs::path const& path) {
-    auto const name = normalizeClr(path);
-    auto encPath = dirs[1] / name;
+    auto encPath = makeEncPath(path);
     if(fs::is_directory(path)) {
         fs::create_directories(encPath);
     }
     else {
-        encPath += ".7z";
         auto cmd = "7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl "
                    + encPath.string() + " " + path.string();
         std::system(cmd.c_str());
@@ -106,8 +104,7 @@ void DirPair::encryptFile(fs::path const& path) {
 }
 
 void DirPair::decryptFile(fs::path const& path) {
-    auto const name = normalizeEnc(path);
-    auto clrPath = dirs[0] / name;
+    auto clrPath = makeClrPath(path);
     if(fs::is_directory(path)) {
         fs::create_directories(clrPath);
     }
@@ -129,4 +126,16 @@ std::string DirPair::normalizeEnc(fs::path const& path) {
         name.replace_extension();
     }
     return name;
+}
+
+fs::path DirPair::makeClrPath(fs::path const &encPath) {
+    return dirs[0] / normalizeEnc(encPath);
+}
+
+fs::path DirPair::makeEncPath(fs::path const &clrPath) {
+    auto encPath = dirs[1] / normalizeClr(clrPath);;
+    if(!fs::is_directory(clrPath)) {
+        encPath += ".7z";
+    }
+    return encPath;
 }

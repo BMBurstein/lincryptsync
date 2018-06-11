@@ -43,6 +43,9 @@ private:
     void encryptFile(fs::path const& path);
     void decryptFile(fs::path const& path);
 
+    fs::path makeClrPath(fs::path const& encPath);
+    fs::path makeEncPath(fs::path const& clrPath);
+
     std::string normalizeClr(fs::path const&);
     std::string normalizeEnc(fs::path const&);
 };
