@@ -75,7 +75,7 @@ void DirPair::handleEvents() {
         case DirWatcher::DirEventTypes::MODIFY:
             if(ev.isDir) {
                 for(auto const& f : fs::recursive_directory_iterator(ev.path)) {
-                    encryptFile(ev.path);
+                    encryptFile(f);
                 }
             }
             else {
@@ -83,7 +83,9 @@ void DirPair::handleEvents() {
             }
             break;
         case DirWatcher::DirEventTypes::DELETE:
-            fs::remove(ev.path); //TODO
+            auto encPath = makeEncPath(ev.path, &ev.isDir);
+            fs::remove_all(encPath);
+            watcher[1].ignore(encPath);
             break;
         }
     }
@@ -132,9 +134,9 @@ fs::path DirPair::makeClrPath(fs::path const &encPath) {
     return dirs[0] / normalizeEnc(encPath);
 }
 
-fs::path DirPair::makeEncPath(fs::path const &clrPath) {
-    auto encPath = dirs[1] / normalizeClr(clrPath);;
-    if(!fs::is_directory(clrPath)) {
+fs::path DirPair::makeEncPath(fs::path const &clrPath, bool* isDir) {
+    auto encPath = dirs[1] / normalizeClr(clrPath);
+    if((isDir && !*isDir) || (!isDir && !fs::is_directory(clrPath))) {
         encPath += ".7z";
     }
     return encPath;

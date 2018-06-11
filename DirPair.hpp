@@ -44,7 +44,7 @@ private:
     void decryptFile(fs::path const& path);
 
     fs::path makeClrPath(fs::path const& encPath);
-    fs::path makeEncPath(fs::path const& clrPath);
+    fs::path makeEncPath(fs::path const& clrPath, bool* isDir = nullptr);
 
     std::string normalizeClr(fs::path const&);
     std::string normalizeEnc(fs::path const&);
