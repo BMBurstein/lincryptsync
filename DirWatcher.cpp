@@ -59,14 +59,16 @@ void DirWatcher::check() {
 
             DirEvent e;
             
-            if (event->mask & IN_CREATE || event->mask & IN_MOVED_TO)
-                e.evType == DirEventTypes::CREATE;
-            else if (event->mask & IN_DELETE || event->mask & IN_MOVED_FROM)
-                e.evType == DirEventTypes::DELETE;
-            else if (event->mask & IN_MODIFY)
-                e.evType == DirEventTypes::MODIFY;
-            else if (event->mask & IN_IGNORED) {
+            if (event->mask & IN_CREATE || event->mask & IN_MOVED_TO) {
+                e.evType = DirEventTypes::CREATE;
+            } else if (event->mask & IN_DELETE || event->mask & IN_MOVED_FROM) {
+                e.evType = DirEventTypes::DELETE;
+            } else if (event->mask & IN_MODIFY) {
+                e.evType = DirEventTypes::MODIFY;
+            } else if (event->mask & IN_IGNORED) {
                 wd.erase(event->wd);
+                continue;
+            } else {
                 continue;
             }
 
