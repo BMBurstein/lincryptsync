@@ -6,22 +6,21 @@
 
 #include <sys/inotify.h>
 
+static const int mask = IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVE |
+                              IN_ONLYDIR | IN_DONT_FOLLOW | IN_EXCL_UNLINK;
+
 DirWatcher::DirWatcher(std::string directory)
   : fd(inotify_init1(IN_NONBLOCK))
 {
     if(fd == -1) throw std::runtime_error("init");
 
-    int i = inotify_add_watch(fd, directory.c_str(),
-                              IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVE |
-                              IN_ONLYDIR | IN_DONT_FOLLOW | IN_EXCL_UNLINK );
+    int i = inotify_add_watch(fd, directory.c_str(), mask);
     wd[i] = directory;
 
     for(auto const& f : fs::recursive_directory_iterator(std::move(directory))) {
         if(fs::is_directory(f)) {
-            i = inotify_add_watch(fd, f.path().c_str(),
-                                  IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVE |
-                                  IN_ONLYDIR | IN_DONT_FOLLOW | IN_EXCL_UNLINK );
-            wd[i] = f.path();
+            i = inotify_add_watch(fd, f.path().c_str(), mask);
+            wd[i] = f;
         }
     }
 }
@@ -37,8 +36,10 @@ bool DirWatcher::getEvent(DirEvent& ev) {
     if(events.empty()) {
         return false;
     }
+
     ev = events.front();
     events.pop();
+
     return true;
 }
 
@@ -87,9 +88,7 @@ void DirWatcher::check() {
             if(e.isDir) {
                 switch(e.evType) {
                     case DirEventTypes::CREATE:
-                        int i = inotify_add_watch(fd, e.path.c_str(),
-                                                  IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVE |
-                                                  IN_ONLYDIR | IN_DONT_FOLLOW | IN_EXCL_UNLINK );
+                        int i = inotify_add_watch(fd, e.path.c_str(), mask);
                         wd[i] = e.path;
                         break;
                 }
