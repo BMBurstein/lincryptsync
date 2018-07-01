@@ -9,7 +9,7 @@ namespace fs = std::filesystem;
 
 class DirWatcher {
 public:
-    explicit DirWatcher(std::string directory);
+    DirWatcher(std::string directory);
     ~DirWatcher();
 
     enum class DirEventTypes {
