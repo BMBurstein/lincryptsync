@@ -12,12 +12,6 @@ DirPair::DirPair(fs::path clrPath, fs::path encPath, EncType encType, SyncType s
     syncType(syncType),
     watcher{ DirWatcher(dirs[0].string()), DirWatcher(dirs[1].string()) }
 {
-    for(auto const& d: dirs) {
-        if (!fs::is_directory(d)) {
-            fs::create_directories(d);
-        }
-    }
-
     switch(encType) {
     case EncType::z7:
         encExt = ".7z"; break;

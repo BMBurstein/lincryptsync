@@ -14,6 +14,10 @@ DirWatcher::DirWatcher(std::string directory)
 {
     if(fd == -1) throw std::runtime_error("init");
 
+    if (!fs::is_directory(directory)) {
+        fs::create_directories(directory);
+    }
+
     int i = inotify_add_watch(fd, directory.c_str(), mask);
     wd[i] = directory;
 
