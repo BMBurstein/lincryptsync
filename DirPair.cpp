@@ -65,22 +65,38 @@ void DirPair::handleEvents() {
     DirWatcher::DirEvent ev;
     while(watcher[0].getEvent(ev)) {
         switch(ev.evType) {
-        case DirWatcher::DirEventTypes::CREATE:
-        case DirWatcher::DirEventTypes::MODIFY:
-            if(ev.isDir) {
-                for(auto const& f : fs::recursive_directory_iterator(ev.path)) {
-                    encryptFile(f);
-                }
-            }
-            else {
+            case DirWatcher::DirEventTypes::CREATE:
+            case DirWatcher::DirEventTypes::MODIFY:
                 encryptFile(ev.path);
-            }
-            break;
-        case DirWatcher::DirEventTypes::DELETE:
-            auto encPath = makeEncPath(ev.path, &ev.isDir);
-            fs::remove_all(encPath);
-            watcher[1].ignore(encPath);
-            break;
+                if(ev.isDir) {
+                    for(auto const& f : fs::recursive_directory_iterator(ev.path)) {
+                        encryptFile(f);
+                    }
+                }
+                break;
+            case DirWatcher::DirEventTypes::DELETE:
+                auto encPath = makeEncPath(ev.path, &ev.isDir);
+                fs::remove_all(encPath);
+                watcher[1].ignore(encPath);
+                break;
+        }
+    }
+    while(watcher[1].getEvent(ev)) {
+        switch(ev.evType) {
+            case DirWatcher::DirEventTypes::CREATE:
+            case DirWatcher::DirEventTypes::MODIFY:
+                decryptFile(ev.path);
+                if(ev.isDir) {
+                    for(auto const& f : fs::recursive_directory_iterator(ev.path)) {
+                        decryptFile(f);
+                    }
+                }
+                break;
+            case DirWatcher::DirEventTypes::DELETE:
+                auto clrPath = makeClrPath(ev.path);
+                fs::remove_all(clrPath);
+                watcher[0].ignore(clrPath);
+                break;
         }
     }
 }
