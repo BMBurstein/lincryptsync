@@ -38,14 +38,11 @@ private:
     std::string encExt;
     DirWatcher watcher[2];
 
-    void handleEvents();
+    typedef unsigned int DirType;
 
-    void encryptFile(fs::path const& path);
-    void decryptFile(fs::path const& path);
+    void handleFile(DirType dir, fs::path const& srcPath);
 
-    fs::path makeClrPath(fs::path const& encPath);
-    fs::path makeEncPath(fs::path const& clrPath, bool* isDir = nullptr);
+    fs::path makePath(DirType destDir, fs::path const& srcPath, bool* isDir = nullptr);
 
-    std::string normalizeClr(fs::path const&);
-    std::string normalizeEnc(fs::path const&);
+    std::string normalize(DirType dir, fs::path const&);
 };
