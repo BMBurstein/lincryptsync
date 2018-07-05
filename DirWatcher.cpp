@@ -38,6 +38,7 @@ bool DirWatcher::getEvent(DirEvent& ev) {
         check();
     }
     if(events.empty()) {
+        ignoreList.clear();
         return false;
     }
 
@@ -80,12 +81,6 @@ void DirWatcher::check() {
             e.path = wd[event->wd];
             if (event->len)
                 e.path /= event->name;
-
-            auto it = ignoreList.find(e.path);
-            if(it != ignoreList.end()) {
-                ignoreList.erase(it);
-                continue;
-            }
 
             e.isDir = event->mask & IN_ISDIR;
 
