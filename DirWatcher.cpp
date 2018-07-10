@@ -93,6 +93,10 @@ void DirWatcher::check() {
                 }
             }
 
+            if(ignoreList.find(e.path) != ignoreList.end()) {
+                continue;
+            }
+
             events.push(std::move(e));
         }
     }
