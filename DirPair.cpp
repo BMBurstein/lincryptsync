@@ -5,9 +5,9 @@
 #include <chrono>
 #include <iostream>
 
-#define CLEAR      0
-#define CRYPT      1
-#define OTHER(dir) (1-(dir))
+const unsigned int CLEAR = 0;
+const unsigned int CRYPT = 1;
+auto const OTHER  = [](unsigned int dir){ return 1 - dir; };
 
 using namespace std::chrono_literals;
 
