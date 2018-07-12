@@ -99,9 +99,7 @@ void DirPair::handleFile(DirType dir, fs::path const& srcPath) {
             std::system(cmd.c_str());
             fs::last_write_time(destPath, fs::last_write_time(srcPath));
         } else {
-            auto destDir = destPath;
-            destDir.remove_filename();
-            auto cmd = "7zr e -y " + srcPath.string() + " -o" + destDir.string();
+            auto cmd = "7zr e -y " + srcPath.string() + " -o" + destPath.parent_path().string();
             std::system(cmd.c_str());
         }
     }
