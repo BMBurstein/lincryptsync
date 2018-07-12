@@ -18,15 +18,7 @@ DirWatcher::DirWatcher(fs::path directory)
         fs::create_directories(directory);
     }
 
-    int i = inotify_add_watch(fd, directory.c_str(), mask);
-    wd[i] = directory;
-
-    for(auto const& f : fs::recursive_directory_iterator(std::move(directory))) {
-        if(fs::is_directory(f)) {
-            i = inotify_add_watch(fd, f.path().c_str(), mask);
-            wd[i] = f;
-        }
-    }
+    addNotify(directory);
 }
 
 DirWatcher::~DirWatcher() {
@@ -87,8 +79,7 @@ void DirWatcher::check() {
             if(e.isDir) {
                 switch(e.evType) {
                     case DirEventTypes::CREATE:
-                        int i = inotify_add_watch(fd, e.path.c_str(), mask);
-                        wd[i] = e.path;
+                        addNotify(e.path);
                         break;
                 }
             }
@@ -104,4 +95,16 @@ void DirWatcher::check() {
 
 void DirWatcher::ignore(std::string path) {
     ignoreList.emplace(std::move(path));
+}
+
+void DirWatcher::addNotify(fs::path const& directory) {
+    int i = inotify_add_watch(fd, directory.c_str(), mask);
+    wd[i] = directory;
+
+    for(auto const& f : fs::recursive_directory_iterator(directory)) {
+        if(fs::is_directory(f)) {
+            i = inotify_add_watch(fd, f.path().c_str(), mask);
+            wd[i] = f;
+        }
+    }
 }

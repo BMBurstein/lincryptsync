@@ -35,4 +35,5 @@ private:
     std::set<std::string> ignoreList;
 
     void check();
+    void addNotify(fs::path const& directory);
 };
