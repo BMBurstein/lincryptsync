@@ -9,7 +9,7 @@
 static const int mask = IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVE |
                               IN_ONLYDIR | IN_DONT_FOLLOW | IN_EXCL_UNLINK;
 
-DirWatcher::DirWatcher(std::string directory)
+DirWatcher::DirWatcher(fs::path directory)
   : fd(inotify_init1(IN_NONBLOCK))
 {
     if(fd == -1) throw std::runtime_error("init");

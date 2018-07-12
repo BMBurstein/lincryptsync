@@ -9,7 +9,7 @@ namespace fs = std::filesystem;
 
 class DirWatcher {
 public:
-    DirWatcher(std::string directory);
+    DirWatcher(fs::path directory);
     ~DirWatcher();
 
     enum class DirEventTypes {
@@ -32,7 +32,7 @@ private:
     int fd;
     std::map<int, fs::path> wd;
     std::queue<DirEvent> events;
-    std::multiset<std::string> ignoreList;
+    std::set<std::string> ignoreList;
 
     void check();
 };

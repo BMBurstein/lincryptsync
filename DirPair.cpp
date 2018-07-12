@@ -15,7 +15,7 @@ DirPair::DirPair(fs::path clrPath, fs::path encPath, EncType encType, SyncType s
   : dirs{std::move(clrPath), std::move(encPath)},
     encType(encType),
     syncType(syncType),
-    watcher{ dirs[CLEAR].string(), dirs[CRYPT].string() }
+    watcher{ dirs[CLEAR], dirs[CRYPT] }
 {
     switch(encType) {
     case EncType::z7:
