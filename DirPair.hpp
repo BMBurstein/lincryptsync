@@ -42,7 +42,6 @@ private:
 
     void handleFile(DirType dir, fs::path const& srcPath);
 
-    fs::path makePath(DirType destDir, fs::path const& srcPath, bool* isDir = nullptr);
-
-    std::string normalize(DirType dir, fs::path const&);
+    fs::path makePath(DirType destDir, fs::path const& srcPath, bool* isDir = nullptr) const;
+    std::string normalize(DirType dir, fs::path const&) const;
 };

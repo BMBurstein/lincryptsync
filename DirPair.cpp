@@ -108,7 +108,7 @@ void DirPair::handleFile(DirType dir, fs::path const& srcPath) {
     watcher[OTHER(dir)].ignore(destPath);
 }
 
-std::string DirPair::normalize(DirType dir, fs::path const& path) {
+std::string DirPair::normalize(DirType dir, fs::path const& path) const {
     auto name = path.lexically_proximate(dirs[dir]);
     if(dir == CRYPT) {
         if (name.extension() == encExt) {
@@ -118,7 +118,7 @@ std::string DirPair::normalize(DirType dir, fs::path const& path) {
     return name;
 }
 
-fs::path DirPair::makePath(DirType destDir, fs::path const &srcPath, bool* isDir) {
+fs::path DirPair::makePath(DirType destDir, fs::path const &srcPath, bool* isDir) const {
     auto destPath = dirs[destDir] / normalize(OTHER(destDir), srcPath);
     if(destDir == CRYPT) {
         if(isDir ? (!*isDir) : (!fs::is_directory(srcPath))) {
