@@ -6,7 +6,7 @@
 using namespace std::chrono_literals;
 
 int main() {
-    DirPair pair{"/home/baruch/test/clrsync", "/home/baruch/test/cryptsync", EncType::z7};
+    DirPair pair{"/home/baruch/test/clrsync", "/home/baruch/test/cryptsync", "secret pass", EncType::z7};
     pair.sync();
 
     std::cout << "Syncing...\n";

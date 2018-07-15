@@ -11,7 +11,7 @@ auto const OTHER  = [](unsigned int dir){ return 1 - dir; };
 
 using namespace std::chrono_literals;
 
-DirPair::DirPair(fs::path clrPath, fs::path encPath, EncType encType, SyncType syncType)
+DirPair::DirPair(fs::path clrPath, fs::path encPath, std::string password, EncType encType, SyncType syncType)
   : dirs{std::move(clrPath), std::move(encPath)},
     encType(encType),
     syncType(syncType),
@@ -20,6 +20,10 @@ DirPair::DirPair(fs::path clrPath, fs::path encPath, EncType encType, SyncType s
     switch(encType) {
     case EncType::z7:
         encExt = ".7z"; break;
+    }
+
+    if(!password.empty()) {
+        passwd = "-p\"" + password + "\" ";
     }
 
     fullSync();
@@ -95,10 +99,11 @@ void DirPair::handleFile(DirType dir, fs::path const& srcPath) {
     else {
         if (dir == CLEAR) {
             auto cmd = "7za a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -stl "
-                       + destPath.string() + " " + srcPath.string();
+                       + passwd + destPath.string() + " " + srcPath.string();
             std::system(cmd.c_str());
         } else {
-            auto cmd = "7za e -y " + srcPath.string() + " -o" + destPath.parent_path().string();
+            auto cmd = "7za e -y " + passwd + srcPath.string() + " -o"
+                       + destPath.parent_path().string();
             std::system(cmd.c_str());
         }
     }

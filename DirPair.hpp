@@ -23,6 +23,7 @@ class DirPair {
 public:
     DirPair(fs::path clrPath,
             fs::path encPath,
+            std::string password,
             EncType encType = EncType::None,
             SyncType syncType = SyncType::Both
     );
@@ -36,6 +37,7 @@ private:
     SyncType syncType;
     std::map<std::string, fs::path> files[2];
     std::string encExt;
+    std::string passwd;
     DirWatcher watcher[2];
 
     typedef unsigned int DirType;
