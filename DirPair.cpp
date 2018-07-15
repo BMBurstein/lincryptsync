@@ -94,12 +94,11 @@ void DirPair::handleFile(DirType dir, fs::path const& srcPath) {
     }
     else {
         if (dir == CLEAR) {
-            auto cmd = "7zr a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -w -stl "
+            auto cmd = "7za a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -stl "
                        + destPath.string() + " " + srcPath.string();
             std::system(cmd.c_str());
-            fs::last_write_time(destPath, fs::last_write_time(srcPath));
         } else {
-            auto cmd = "7zr e -y " + srcPath.string() + " -o" + destPath.parent_path().string();
+            auto cmd = "7za e -y " + srcPath.string() + " -o" + destPath.parent_path().string();
             std::system(cmd.c_str());
         }
     }
