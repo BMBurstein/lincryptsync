@@ -85,7 +85,6 @@ void DirPair::sync() {
                     watcher[OTHER(i)].ignore(path);
                     break;
             }
-            std::cerr << int(ev.evType) << ' ' << ev.path << '\n';
         }
     }
 }
