@@ -36,7 +36,6 @@ private:
     EncType  encType;
     SyncType syncType;
     std::map<std::string, fs::path> files[2];
-    std::string encExt;
     std::string passwd;
     DirWatcher watcher[2];
 

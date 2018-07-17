@@ -11,17 +11,22 @@ auto const OTHER  = [](unsigned int dir){ return 1 - dir; };
 
 using namespace std::chrono_literals;
 
+static std::string getExt(EncType t) {
+    switch(t) {
+        case EncType::z7:
+            return ".7z";
+        case EncType::None:break;
+        case EncType::gpg:break;
+    }
+    return {};
+}
+
 DirPair::DirPair(fs::path clrPath, fs::path encPath, std::string password, EncType encType, SyncType syncType)
   : dirs{std::move(clrPath), std::move(encPath)},
     encType(encType),
     syncType(syncType),
     watcher{ dirs[CLEAR], dirs[CRYPT] }
 {
-    switch(encType) {
-    case EncType::z7:
-        encExt = ".7z"; break;
-    }
-
     if(!password.empty()) {
         passwd = "-p\"" + password + "\" ";
     }
@@ -96,14 +101,23 @@ void DirPair::handleFile(DirType dir, fs::path const& srcPath) {
         fs::create_directories(destPath);
     }
     else {
-        if (dir == CLEAR) {
-            auto cmd = "7za a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -stl "
-                       + passwd + destPath.string() + " " + srcPath.string();
-            std::system(cmd.c_str());
-        } else {
-            auto cmd = "7za e -y " + passwd + srcPath.string() + " -o"
-                       + destPath.parent_path().string();
-            std::system(cmd.c_str());
+        switch (encType) {
+            case EncType::z7: {
+                std::string cmd;
+                if (dir == CLEAR) {
+                    cmd = "7za a -y -t7z -ssw -mx9 -mhe=on -m0=lzma2 -mtc=on -stl "
+                          + passwd + destPath.string() + " " + srcPath.string();
+
+                } else {
+                    cmd = "7za e -y " + passwd + srcPath.string() + " -o"
+                          + destPath.parent_path().string();
+                }
+                std::system(cmd.c_str());
+            } break;
+            case EncType::None: {
+                fs::copy_file(srcPath, destPath, fs::copy_options::overwrite_existing);
+                fs::last_write_time(destPath, fs::last_write_time(srcPath));
+            } break;
         }
     }
     watcher[OTHER(dir)].ignore(destPath);
@@ -112,7 +126,7 @@ void DirPair::handleFile(DirType dir, fs::path const& srcPath) {
 std::string DirPair::normalize(DirType dir, fs::path const& path) const {
     auto name = path.lexically_proximate(dirs[dir]);
     if(dir == CRYPT) {
-        if (name.extension() == encExt) {
+        if (name.extension() == getExt(encType)) {
             name.replace_extension();
         }
     }
@@ -123,7 +137,7 @@ fs::path DirPair::makePath(DirType destDir, fs::path const &srcPath, bool* isDir
     auto destPath = dirs[destDir] / normalize(OTHER(destDir), srcPath);
     if(destDir == CRYPT) {
         if(isDir ? (!*isDir) : (!fs::is_directory(srcPath))) {
-            destPath += ".7z";
+            destPath += getExt(encType);
         }
     }
     return destPath;
